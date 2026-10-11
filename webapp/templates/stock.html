@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Stock - Blood Bank{% endblock %}
+{% block content %}
+{% set groups = ['A+','A-','B+','B-','AB+','AB-','O+','O-'] %}
+{% set comps = ['WHOLE','RBC','PLASMA','PLATELETS'] %}
+<div class="page-head">
+  <h1>Available Stock</h1>
+  <p class="sub">Usable units by blood group and component. Darker cells mean more units on the shelf.</p>
+</div>
+
+<div class="table-card">
+<table class="heat">
+  <thead>
+    <tr><th>Group</th>{% for c in comps %}<th>{{ c }}</th>{% endfor %}</tr>
+  </thead>
+  <tbody>
+  {% for g in groups %}
+    <tr>
+      <th scope="row">{{ g }}</th>
+      {% for c in comps %}
+        {% set ns = namespace(q=0) %}
+        {% for r in rows %}{% if r.blood_group == g and r.component_code == c %}{% set ns.q = r.qty %}{% endif %}{% endfor %}
+        {% if ns.q == 0 %}
+          <td class="zero">&ndash;</td>
+        {% else %}
+          {% set a = [0.16 + ns.q * 0.2, 0.92]|min %}
+          <td style="background: rgba(192,24,43,{{ a }}); color: {{ '#fff' if a > 0.5 else 'inherit' }}">{{ ns.q }}</td>
+        {% endif %}
+      {% endfor %}
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+
+<h2>Details</h2>
+<div class="table-card">
+<table>
+  <thead>
+    <tr><th>Blood Group</th><th>Component</th><th class="num">Units</th><th>Earliest Expiry</th></tr>
+  </thead>
+  <tbody>
+  {% for r in rows %}
+    <tr>
+      <td><b>{{ r.blood_group }}</b></td>
+      <td>{{ r.component_code }}</td>
+      <td class="num">{{ r.qty }}</td>
+      <td>{{ r.earliest.strftime('%Y-%m-%d') if r.earliest else '' }}</td>
+    </tr>
+  {% else %}
+    <tr><td colspan="4" class="empty">No units available.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

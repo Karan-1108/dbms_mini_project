@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - Blood Bank{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Dashboard</h1>
+  <p class="sub">A live overview of stock, open requests and the integrity of the audit ledger.</p>
+</div>
+
+<div class="stats">
+  <div class="stat">
+    <div class="chip"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 12l9 5 9-5"/><path d="M3 16l9 5 9-5"/></svg></div>
+    <div><div class="num">{{ stock_total }}</div><div class="lbl">Units in stock</div></div>
+  </div>
+  <div class="stat">
+    <div class="chip warn"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+    <div><div class="num">{{ pending }}</div><div class="lbl">Pending requests</div></div>
+  </div>
+  <div class="stat">
+    <div class="chip info"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><circle cx="17.5" cy="9" r="2.5"/><path d="M17 14.2c2.7.2 4.5 2 4.5 4.8"/></svg></div>
+    <div><div class="num">{{ donors_n }}</div><div class="lbl">Registered donors</div></div>
+  </div>
+  <div class="stat">
+    <div class="chip {{ 'ok' if chain == 0 else 'bad' }}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.2 8-8 9-4.8-1-8-4.5-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg></div>
+    <div>
+      <div class="num {% if chain == 0 %}good{% else %}bad{% endif %}">{% if chain == 0 %}OK{% else %}BROKEN{% endif %}</div>
+      <div class="lbl">Audit chain</div>
+    </div>
+  </div>
+</div>
+
+<h2>Recent units</h2>
+<div class="table-card">
+<table>
+  <thead>
+    <tr><th>Unit ID</th><th>Group</th><th>Component</th><th>Expiry</th><th>Status</th></tr>
+  </thead>
+  <tbody>
+  {% for r in recent %}
+    <tr>
+      <td>#{{ r.unit_id }}</td>
+      <td><b>{{ r.blood_group }}</b></td>
+      <td>{{ r.component_code }}</td>
+      <td>{{ r.expiry_date.strftime('%Y-%m-%d') if r.expiry_date else '' }}</td>
+      <td><span class="tag st-{{ r.status|lower }}">{{ r.status }}</span></td>
+    </tr>
+  {% else %}
+    <tr><td colspan="5" class="empty">No units yet.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

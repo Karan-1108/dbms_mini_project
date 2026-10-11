@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Requests - Blood Bank{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Blood Requests</h1>
+  <p class="sub">Critical requests are marked with a red edge. &ldquo;Find &amp; Issue&rdquo; runs the matching package in the database.</p>
+</div>
+
+<div class="table-card">
+<table>
+  <thead>
+    <tr>
+      <th>ID</th><th>Hospital</th><th>Patient</th><th>Group</th><th>Component</th>
+      <th class="num">Needed</th><th>Issued</th><th>Urgency</th><th>Status</th><th>Action</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for r in rows %}
+    {% set pct = [((r.issued / r.units_needed) * 100)|round|int, 100]|min if r.units_needed else 0 %}
+    <tr class="{{ 'crit' if r.urgency == 'CRITICAL' and r.status != 'FULFILLED' }}">
+      <td>#{{ r.request_id }}</td>
+      <td>{{ r.hospital_name }}</td>
+      <td>{{ r.patient_name }}</td>
+      <td><b>{{ r.blood_group }}</b></td>
+      <td>{{ r.component_code }}</td>
+      <td class="num">{{ r.units_needed }}</td>
+      <td>{{ r.issued }}<span class="meter" title="{{ r.issued }} of {{ r.units_needed }} issued"><span style="width: {{ pct }}%"></span></span></td>
+      <td><span class="tag urg-{{ r.urgency|lower }}">{{ r.urgency }}</span></td>
+      <td><span class="tag st-{{ r.status|lower }}">{{ r.status }}</span></td>
+      <td>
+        {% if r.status == 'FULFILLED' %}
+          <span class="done">&#10003; Done</span>
+        {% else %}
+          <form class="inline" method="post" action="{{ url_for('fulfill', rid=r.request_id) }}">
+            <button class="btn sm" type="submit">Find &amp; Issue</button>
+          </form>
+        {% endif %}
+      </td>
+    </tr>
+  {% else %}
+    <tr><td colspan="10" class="empty">No requests yet.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

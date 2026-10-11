@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Donors - Blood Bank{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Donors</h1>
+  <p class="sub">The database decides who may donate: age 18 to 65 and at least 90 days since the last donation.</p>
+</div>
+
+<div class="card">
+  <h3>Record a new donation</h3>
+  <form method="post" action="{{ url_for('donate') }}">
+    <div class="form-row">
+      <label>Donor ID
+        <input type="number" id="donor_id" name="donor_id" min="1" required>
+      </label>
+      <label>Component
+        <select name="component_code">
+          <option>RBC</option>
+          <option>WHOLE</option>
+          <option>PLASMA</option>
+          <option>PLATELETS</option>
+        </select>
+      </label>
+      <button class="btn" type="submit">Register Donation</button>
+    </div>
+  </form>
+  <small class="hint">Try donor 14 (A+, eligible) or donor 1 (ineligible - donated recently). Use the Select button on any row to fill in the ID.</small>
+</div>
+
+<div class="table-card">
+<table>
+  <thead>
+    <tr>
+      <th>ID</th><th>Name</th><th>Group</th><th>City</th>
+      <th>Last Donation</th><th>Eligible?</th><th></th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for d in donors %}
+    <tr>
+      <td>#{{ d.donor_id }}</td>
+      <td>{{ d.full_name }}</td>
+      <td><b>{{ d.blood_group }}</b></td>
+      <td>{{ d.city }}</td>
+      <td>{{ d.last_donation_date.strftime('%Y-%m-%d') if d.last_donation_date else '-' }}</td>
+      <td>{% if d.eligible == 'Y' %}<span class="tag good-tag">Yes</span>{% else %}<span class="tag bad-tag">No</span>{% endif %}</td>
+      <td><button type="button" class="btn secondary sm" onclick="pickDonor({{ d.donor_id }})">Select</button></td>
+    </tr>
+  {% else %}
+    <tr><td colspan="7" class="empty">No donors yet.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+  function pickDonor(id) {
+    var box = document.getElementById('donor_id');
+    box.value = id;
+    box.focus();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+</script>
+{% endblock %}

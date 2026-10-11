@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}Best Unit Finder - Blood Bank{% endblock %}
+{% block content %}
+{% set sg = result.group if result else '' %}
+{% set sc = result.component if result else '' %}
+{% set su = result.urgency if result else '' %}
+<div class="page-head">
+  <h1>Emergency Dispatch - Best Unit Finder</h1>
+  <p class="sub">Ranks the candidate units in the same order the matching package uses: exact group first, then the unit that expires soonest.</p>
+</div>
+
+<div class="card">
+  <form method="post" action="{{ url_for('best_unit') }}">
+    <div class="form-row">
+      <label>Blood Group
+        <select name="blood_group">
+          {% for g in ['A+','A-','B+','B-','AB+','AB-','O+','O-'] %}<option {{ 'selected' if g == sg }}>{{ g }}</option>{% endfor %}
+        </select>
+      </label>
+      <label>Component
+        <select name="component_code">
+          {% for c in ['RBC','WHOLE','PLASMA','PLATELETS'] %}<option {{ 'selected' if c == sc }}>{{ c }}</option>{% endfor %}
+        </select>
+      </label>
+      <label>Urgency
+        <select name="urgency">
+          {% for u in ['NORMAL','CRITICAL'] %}<option {{ 'selected' if u == su }}>{{ u }}</option>{% endfor %}
+        </select>
+      </label>
+      <button class="btn" type="submit">Find best unit</button>
+    </div>
+  </form>
+  <small class="hint">NORMAL = exact group only. CRITICAL = allow compatible groups (RBC/WHOLE only).</small>
+</div>
+
+{% if result %}
+  {% if result.best %}
+    <div class="pick">
+      <div>
+        <div class="eyebrow">Recommended unit</div>
+        <div class="big">#{{ result.best.unit_id }}</div>
+      </div>
+      <div class="facts">
+        <div><small>Group</small><b>{{ result.best.blood_group }}</b></div>
+        <div><small>Component</small><b>{{ result.best.component_code }}</b></div>
+        <div><small>Expires</small><b>{{ result.best.expiry_date.strftime('%Y-%m-%d') }}</b></div>
+      </div>
+    </div>
+  {% else %}
+    <div class="none">
+      No compatible unit found for {{ result.group }} {{ result.component }}
+      ({{ result.urgency }}).
+    </div>
+  {% endif %}
+
+  {% if result.rows %}
+    <h2>Full candidate list ({{ result.total }} unit{{ 's' if result.total != 1 else '' }})</h2>
+    <div class="table-card">
+    <table>
+      <thead>
+        <tr>
+          <th>Rank</th><th>Unit ID</th><th>Donor Group</th>
+          <th>Component</th><th>Expiry</th><th>Match Type</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for r in result.rows %}
+      <tr class="{{ 'best' if loop.first }}">
+        <td><span class="rank">{{ loop.index }}</span></td>
+        <td>#{{ r.unit_id }}</td>
+        <td>{{ r.blood_group }}</td>
+        <td>{{ r.component_code }}</td>
+        <td>{{ r.expiry_date.strftime('%Y-%m-%d') }}</td>
+        <td><span class="tag match-{{ 'exact' if r.rank_group == 0 else 'compatible' }}">{% if r.rank_group == 0 %}exact{% else %}compatible{% endif %}</span></td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    </div>
+  {% endif %}
+{% endif %}
+{% endblock %}
